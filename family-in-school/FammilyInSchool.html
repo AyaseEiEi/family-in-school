@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Family in School</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at top, #0f2027, #050505);
+  color: #fff;
+  text-align: center;
+  overflow-x: hidden;
+}
+
+canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  display: none;
+  min-height: 100vh;
+  padding: 40px 20px;
+  animation: pageIn 1s ease;
+}
+
+.active { display: block; }
+
+h1, h2 { color: #7fffd4; }
+
+.school {
+  font-size: 14px;
+  opacity: .7;
+  margin-bottom: 20px;
+}
+
+button {
+  position: relative;
+  padding: 14px 28px;
+  border-radius: 40px;
+  border: none;
+  background: linear-gradient(135deg,#7fffd4,#00c9ff);
+  color: #000;
+  font-size: 16px;
+  cursor: pointer;
+  margin: 10px;
+  box-shadow: 0 0 20px rgba(127,255,212,.5);
+  overflow: hidden;
+  transition: transform .2s;
+}
+
+button:active { transform: scale(.95); }
+
+button::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(255,255,255,.3);
+  opacity:0;
+  transition:.3s;
+}
+
+button:active::after { opacity:1; }
+
+textarea {
+  width:90%;
+  max-width:500px;
+  height:100px;
+  border-radius:14px;
+  border:none;
+  padding:12px;
+  font-size:15px;
+}
+
+.list { max-width:360px; margin:auto; text-align:left; line-height:1.9; }
+
+img {
+  max-width:90%;
+  border-radius:18px;
+  margin-top:20px;
+  box-shadow:0 0 30px rgba(127,255,212,.4);
+}
+
+.flash {
+  animation: flash .4s;
+}
+
+@keyframes pageIn {
+  from {opacity:0; transform:translateY(40px) scale(.98); filter:blur(6px);}
+  to {opacity:1; transform:none; filter:none;}
+}
+
+@keyframes flash {
+  from {filter:brightness(2);}
+  to {filter:brightness(1);}
+}
+</style>
+</head>
+<body>
+
+<canvas id="dust"></canvas>
+
+<audio id="bgm" loop>
+  <source src="rak-nai-wan-la.mp3">
+</audio>
+
+<!-- PAGE 1 -->
+<div class="page active" id="p1">
+  <h1>Family in School</h1>
+  <div class="school">
+    Tharumprachasermwit School<br>
+    รุ่น 56 | ปีการศึกษา 2569
+  </div>
+  <p>Some people become memories…</p>
+  <button onclick="start()">Open</button>
+</div>
+
+<!-- PAGE 2 -->
+<div class="page" id="p2">
+  <h2>Our Family</h2>
+  <div class="list" id="familyList"></div>
+  <button onclick="go(3)">Next</button>
+</div>
+
+<!-- PAGE 3 -->
+<div class="page" id="p3">
+  <h2>Question 1</h2>
+  <p>Do you think distance can erase memories?</p>
+  <button onclick="go(4)">No</button>
+</div>
+
+<!-- PAGE 4 -->
+<div class="page" id="p4">
+  <h2>Question 2</h2>
+  <p>Is there a moment you want to keep forever?</p>
+  <button onclick="go(5)">Yes</button>
+</div>
+
+<!-- PAGE 5 -->
+<div class="page" id="p5">
+  <h2>Question 3</h2>
+  <p>Will you really never forget us?</p>
+  <button onclick="go(6)">Never Forget</button>
+</div>
+
+<!-- PAGE 6 -->
+<div class="page" id="p6">
+  <h2>Leave a Message</h2>
+  <textarea id="msg" placeholder="Write something from your heart..."></textarea><br>
+  <button onclick="saveMessage()">Save</button>
+</div>
+
+<!-- PAGE 7 -->
+<div class="page" id="p7">
+  <h2>Our Memories</h2>
+  <div id="messages"></div>
+  <img id="slide" src="img1.jpg">
+  <button onclick="go(8)">Next</button>
+</div>
+
+<!-- PAGE 8 -->
+<div class="page" id="p8">
+  <h2>M.6 Seniors and M.4 Juniors</h2>
+  <div class="list">
+    • Phuwadin Chuenarrom<br>
+    • Thakdanai Nopmak<br>
+    • Nichakan Taosomta<br>
+    • Manantita Namsom<br>
+    • Suwicha Maneesri<br>
+    • Khwanpatsra SoiChit<br>
+    • Kannika Tamlena<br>
+    • Sureephorn Tanan<br>
+    • Suchawadee Chodee<br>
+    • Kanyacha Sathipphati
+  </div>
+
+  <h3>Scan to Remember</h3>
+  <img id="qr">
+</div>
+
+<script>
+/* DATA */
+const family = [
+ "Phuwadin Chuenarrom — Brother",
+ "Thakdanai Nopmak — Brother",
+ "Nichakan Taosomta — Sister",
+ "Manantita Namsom — Sister",
+ "Suwicha Maneesri — Sister",
+ "Khwanpatsra SoiChit — Sister",
+ "Kannika Tamlena — Sister",
+ "Sureephorn Tanan — Sister",
+ "Suchawadee Chodee — Sister",
+ "Kanyacha Sathipphati — Sister"
+];
+
+const images = ["img1.jpg","img2.jpg","img3.jpg"];
+let idx=0;
+
+/* START */
+function start(){
+  bgm.volume=.4; bgm.play();
+  familyList.innerHTML = family.join("<br>");
+  go(2);
+}
+
+/* NAV */
+function go(n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('p'+n).classList.add('active');
+}
+
+/* MESSAGE */
+function saveMessage(){
+  const arr = JSON.parse(localStorage.getItem("msgs")||"[]");
+  arr.push(msg.value);
+  localStorage.setItem("msgs",JSON.stringify(arr));
+  showMessages();
+  go(7);
+}
+
+function showMessages(){
+  const arr = JSON.parse(localStorage.getItem("msgs")||"[]");
+  messages.innerHTML = arr.map(m=>"💬 "+m).join("<br><br>");
+}
+
+/* SLIDESHOW */
+setInterval(()=>{
+  const img=document.getElementById("slide");
+  if(!img) return;
+  idx=(idx+1)%images.length;
+  img.src=images[idx];
+  img.classList.add("flash");
+  setTimeout(()=>img.classList.remove("flash"),400);
+},4000);
+
+/* QR */
+qr.src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="+encodeURIComponent(location.href);
+
+/* PARTICLES */
+const c=dust,ctx=c.getContext("2d");
+c.width=innerWidth;c.height=innerHeight;
+const ps=[...Array(80)].map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*2+1,v:Math.random()*.3+.1}));
+(function anim(){
+ ctx.clearRect(0,0,c.width,c.height);
+ ps.forEach(p=>{
+  p.y-=p.v; if(p.y<0)p.y=c.height;
+  ctx.fillStyle="rgba(127,255,212,.6)";
+  ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+ });
+ requestAnimationFrame(anim);
+})();
+</script>
+</body>
+</html>
